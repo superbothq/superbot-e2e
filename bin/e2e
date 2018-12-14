@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+set -e
+desired_version=$1
+
+if [ "${desired_version}" = "" ]; then
+  echo "Usage: bin/e2e version"
+  exit 1
+fi
+
+gem list | grep superbot | cut -d' ' -f1 | xargs -L1 gem uninstall -x -a
+
+gem install superbot
+local_version=$(superbot version)
+
+if [ "${local_version}" != "${desired_version}" ]; then
+  echo "local version: ${local_version} is not ${desired_version}"
+  exit 1
+fi
+
+docker-compose build --build-arg SUPERBOT_VERSION=${desired_version}
+docker-compose run superbot version
+
+echo "OK"
